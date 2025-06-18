@@ -36,7 +36,7 @@
 
 ![image](https://github.com/user-attachments/assets/5c4e22cd-c2d5-4d1f-becb-d3dc488295b1)
 
-✅普通用户管理-学生选课管理功能效果 
+## ✅普通用户管理-学生选课管理功能效果 
 
 用户仪表页面
 
@@ -58,7 +58,7 @@
 
 ![image](https://github.com/user-attachments/assets/205559ba-8a66-4fbf-8d77-30f5b5d8e206)
 
-✅管理员用户管理-学生选课管理功能效果
+## ✅管理员用户管理-学生选课管理功能效果
 
 管理员仪表图
 
@@ -84,7 +84,7 @@
 
 ![image](https://github.com/user-attachments/assets/20d2dad6-02f0-4eef-b016-a872effe6773)
 
-✅管理员用户管理-学生信息管理功能效果
+## ✅管理员用户管理-学生信息管理功能效果
 
 学生的信息管理页面
 
@@ -106,7 +106,7 @@
 
 ![image](https://github.com/user-attachments/assets/c54642fa-8534-4a6a-a861-0a8035395cf7)
 
-✅管理员用户管理-日志记录管理功能效果
+## ✅管理员用户管理-日志记录管理功能效果
 
 操作日志管理页面
 
