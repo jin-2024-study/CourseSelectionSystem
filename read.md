@@ -871,9 +871,7 @@ show processlist;
 
 ## 📞 联系信息
 
-- **开发团队**: CourseSelection Team
-- **技术支持**: tech-support@example.com
-- **项目地址**: https://github.com/your-repo/CourseSelectionSystem
+- **项目地址**: https://github.com/jin-2024-study/CourseSelectionSystem.git/
 - **文档更新**: 2025-06-18
 
 ---
