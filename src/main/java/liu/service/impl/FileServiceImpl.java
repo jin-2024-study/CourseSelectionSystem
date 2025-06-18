@@ -1,0 +1,188 @@
+package liu.service.impl;
+
+import liu.service.FileService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
+
+@Service
+public class FileServiceImpl implements FileService {
+    
+    private final Path fileStorageLocation;
+    
+    public FileServiceImpl() {
+        // 设置文件存储的基础路径（在当前工作目录下的uploads文件夹）
+        // 尝试先使用user.dir，避免使用Tomcat的catalina.base可能导致的权限问题
+        String currentDir = System.getProperty("user.dir");
+        this.fileStorageLocation = Paths.get(currentDir, "uploads").toAbsolutePath().normalize();
+        try {
+            // 创建目录（如果不存在）
+            Files.createDirectories(this.fileStorageLocation);
+            System.out.println("文件存储目录初始化成功: " + this.fileStorageLocation);
+            
+            // 测试目录是否可写
+            Path testFile = this.fileStorageLocation.resolve("test_write.txt");
+            Files.write(testFile, "测试写入权限".getBytes());
+            System.out.println("文件存储目录写入测试成功");
+            Files.deleteIfExists(testFile);
+            
+            // 确保学生照片目录存在
+            Path studentPhotosDir = this.fileStorageLocation.resolve("student_photos");
+            Files.createDirectories(studentPhotosDir);
+            System.out.println("学生照片目录创建/确认成功: " + studentPhotosDir);
+        } catch (IOException ex) {
+            System.err.println("无法创建或访问文件上传目录: " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException("无法创建或访问文件上传目录: " + ex.getMessage(), ex);
+        }
+    }
+    
+    @Override
+    public String saveStudentPhoto(Integer studentId, MultipartFile file) throws IOException {
+        System.out.println("开始保存学生照片，学生ID: " + studentId);
+        
+        if (file.isEmpty()) {
+            System.err.println("上传的文件为空");
+            throw new IOException("文件为空");
+        }
+        
+        System.out.println("文件大小: " + file.getSize() + " 字节");
+        System.out.println("文件类型: " + file.getContentType());
+        
+        try {
+            // 创建学生照片目录
+            Path studentPhotosDir = this.fileStorageLocation.resolve("student_photos");
+            Files.createDirectories(studentPhotosDir);
+            System.out.println("学生照片目录创建/确认成功: " + studentPhotosDir);
+            
+            // 生成唯一的文件名
+            String originalFilename = file.getOriginalFilename();
+            System.out.println("原始文件名: " + originalFilename);
+            
+            String fileExtension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            
+            // 将jfif扩展名转换为jpg以提高兼容性
+            if (".jfif".equalsIgnoreCase(fileExtension)) {
+                fileExtension = ".jpg";
+            }
+            
+            String fileName = studentId + "_" + UUID.randomUUID().toString() + fileExtension;
+            System.out.println("生成的文件名: " + fileName);
+            
+            // 保存文件
+            Path targetPath = studentPhotosDir.resolve(fileName);
+            System.out.println("目标文件路径: " + targetPath);
+            
+            // 使用try-with-resources确保输入流被正确关闭
+            try (java.io.InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            System.out.println("文件保存成功: " + targetPath);
+            
+            // 检查文件是否存在
+            if (Files.exists(targetPath)) {
+                System.out.println("文件确认存在，大小: " + Files.size(targetPath) + " 字节");
+            } else {
+                System.err.println("文件保存后不存在");
+                throw new IOException("文件保存失败");
+            }
+            
+            // 返回相对路径
+            String relativePath = "student_photos/" + fileName;
+            System.out.println("返回的相对路径: " + relativePath);
+            return relativePath;
+        } catch (IOException e) {
+            System.err.println("保存学生照片时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    @Override
+    public Resource downloadFile(String filePath) throws IOException {
+        try {
+            // 常规路径尝试
+            Path file = this.fileStorageLocation.resolve(filePath).normalize();
+            System.out.println("尝试加载文件: " + file.toAbsolutePath());
+            
+            // 检查文件是否存在
+            if (!Files.exists(file)) {
+                System.err.println("文件不存在: " + file.toAbsolutePath());
+                
+                // 尝试修复路径 - 检查是否为jfif文件，如果是，尝试寻找同名的jpg文件
+                if (filePath.toLowerCase().endsWith(".jfif")) {
+                    String jpgPath = filePath.substring(0, filePath.length() - 5) + ".jpg";
+                    Path jpgFile = this.fileStorageLocation.resolve(jpgPath).normalize();
+                    System.out.println("尝试寻找对应的jpg文件: " + jpgFile.toAbsolutePath());
+                    
+                    if (Files.exists(jpgFile)) {
+                        System.out.println("找到对应的jpg文件，使用替代文件");
+                        file = jpgFile;
+                    }
+                }
+                
+                // 如果文件还是不存在，尝试寻找同ID的其他文件
+                if (!Files.exists(file) && filePath.contains("_")) {
+                    String idPrefix = filePath.substring(0, filePath.indexOf("_") + 1);
+                    System.out.println("尝试寻找同ID前缀的文件: " + idPrefix);
+                    
+                    File dir = this.fileStorageLocation.resolve("student_photos").toFile();
+                    File[] matchingFiles = dir.listFiles((d, name) -> name.startsWith(idPrefix));
+                    
+                    if (matchingFiles != null && matchingFiles.length > 0) {
+                        System.out.println("找到" + matchingFiles.length + "个匹配的文件，使用第一个");
+                        file = matchingFiles[0].toPath();
+                    }
+                }
+                
+                // 如果还是找不到，抛出异常
+                if (!Files.exists(file)) {
+                    throw new IOException("无法读取文件: " + filePath);
+                }
+            }
+            
+            Resource resource = new UrlResource(file.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                System.out.println("成功加载文件资源: " + resource.getFilename());
+                return resource;
+            } else {
+                System.err.println("文件存在但无法读取: " + file.toAbsolutePath());
+                throw new IOException("无法读取文件: " + filePath);
+            }
+        } catch (MalformedURLException e) {
+            System.err.println("文件URL格式错误: " + e.getMessage());
+            throw new IOException("无法读取文件: " + filePath, e);
+        }
+    }
+    
+    @Override
+    public Resource viewFile(String filePath) throws IOException {
+        return downloadFile(filePath);
+    }
+    
+    @Override
+    public boolean deleteFile(String filePath) {
+        try {
+            Path file = this.fileStorageLocation.resolve(filePath).normalize();
+            return Files.deleteIfExists(file);
+        } catch (IOException e) {
+            System.err.println("删除文件时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+} 

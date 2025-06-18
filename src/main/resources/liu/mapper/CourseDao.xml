@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="liu.dao.CourseDao">
+
+    <!-- 基本的结果映射 -->
+    <resultMap id="BaseResultMap" type="liu.entity.Course">
+        <id column="course_id" property="course_id"/>
+        <result column="course_code" property="course_code"/>
+        <result column="course_name" property="course_name"/>
+        <result column="course_type" property="course_type"/>
+        <result column="semester" property="semester"/>
+        <result column="credit_hours" property="credit_hours"/>
+        <result column="credits" property="credits"/>
+    </resultMap>
+
+    <!-- 根据ID查询课程 -->
+    <select id="getCourseById" parameterType="int" resultMap="BaseResultMap">
+        SELECT * FROM course WHERE course_id = #{courseId}
+    </select>
+    
+    <!-- 获取所有课程 -->
+    <select id="getAllCourses" resultMap="BaseResultMap">
+        SELECT * FROM course
+    </select>
+    
+    <!-- 根据课程代码查询课程 -->
+    <select id="getCourseByCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT * FROM course WHERE course_code = #{courseCode}
+    </select>
+    
+    <!-- 根据课程类型查询课程 -->
+    <select id="getCoursesByType" parameterType="string" resultMap="BaseResultMap">
+        SELECT * FROM course WHERE course_type = #{courseType}
+    </select>
+    
+    <!-- 根据学期查询课程 -->
+    <select id="getCoursesBySemester" parameterType="string" resultMap="BaseResultMap">
+        SELECT * FROM course WHERE semester = #{semester}
+    </select>
+    
+    <!-- 添加课程 -->
+    <insert id="insertCourse" parameterType="liu.entity.Course" useGeneratedKeys="true" keyProperty="course_id">
+        INSERT INTO course (course_code, course_name, course_type, semester, credit_hours, credits)
+        VALUES (#{course_code}, #{course_name}, #{course_type}, #{semester}, #{credit_hours}, #{credits})
+    </insert>
+    
+    <!-- 更新课程信息 -->
+    <update id="updateCourse" parameterType="liu.entity.Course">
+        UPDATE course
+        SET course_code = #{course_code},
+            course_name = #{course_name},
+            course_type = #{course_type},
+            semester = #{semester},
+            credit_hours = #{credit_hours},
+            credits = #{credits}
+        WHERE course_id = #{course_id}
+    </update>
+    
+    <!-- 删除课程 -->
+    <delete id="deleteCourse" parameterType="int">
+        DELETE FROM course WHERE course_id = #{courseId}
+    </delete>
+</mapper> 

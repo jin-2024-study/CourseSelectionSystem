@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="liu.dao.CourseSelectionListDao">
+
+    <!-- 基本的结果映射 -->
+    <resultMap id="BaseResultMap" type="liu.entity.CourseSelectionList">
+        <id column="list_id" property="list_id"/>
+        <result column="selection_id" property="selection_id"/>
+        <result column="course_id" property="course_id"/>
+    </resultMap>
+    
+    <!-- 使用懒加载的结果映射 -->
+    <resultMap id="LazyLoadMap" type="liu.entity.CourseSelectionList" extends="BaseResultMap">
+        <!-- 懒加载课程信息 -->
+        <association property="course" 
+                     javaType="liu.entity.Course"
+                     select="liu.dao.CourseDao.getCourseById"
+                     column="course_id"
+                     fetchType="lazy">
+        </association>
+    </resultMap>
+    
+    <!-- 包含课程信息的结果映射 -->
+    <resultMap id="DetailWithCourseMap" type="liu.entity.CourseSelectionList" extends="BaseResultMap">
+        <association property="course" javaType="liu.entity.Course">
+            <id column="course_id" property="course_id"/>
+            <result column="course_code" property="course_code"/>
+            <result column="course_name" property="course_name"/>
+            <result column="course_type" property="course_type"/>
+            <result column="semester" property="semester"/>
+            <result column="credit_hours" property="credit_hours"/>
+            <result column="credits" property="credits"/>
+        </association>
+    </resultMap>
+
+    <!-- 根据ID查询选课详情 -->
+    <select id="getCourseSelectionListById" parameterType="int" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list WHERE list_id = #{list_id}
+    </select>
+    
+    <!-- 获取所有选课详情 -->
+    <select id="getCourseSelectionLists" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list
+    </select>
+    
+    <!-- 根据选课ID查询选课详情 -->
+    <select id="getListsByCourseSelectionId" parameterType="int" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list WHERE selection_id = #{selection_id}
+    </select>
+    
+    <!-- 为懒加载提供的方法 -->
+    <select id="getListBySelectionId" parameterType="int" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list WHERE selection_id = #{selection_id}
+    </select>
+    
+    <!-- 根据课程ID查询选课详情 -->
+    <select id="getListsByCourseId" parameterType="int" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list WHERE course_id = #{courseId}
+    </select>
+    
+    <!-- 根据选课ID和课程ID查询选课详情 -->
+    <select id="getListByCourseSelectionAndCourse" resultMap="LazyLoadMap">
+        SELECT * FROM course_selection_list
+        WHERE selection_id = #{arg0} AND course_id = #{arg1}
+    </select>
+
+    <!-- 添加选课详情 -->
+    <insert id="insertCourseSelectionList" parameterType="liu.entity.CourseSelectionList" useGeneratedKeys="true" keyProperty="list_id">
+        INSERT INTO course_selection_list (selection_id, course_id)
+        VALUES (#{selection_id}, #{course_id})
+    </insert>
+
+
+    <!-- 更新选课详情 -->
+    <update id="updateCourseSelectionList" parameterType="liu.entity.CourseSelectionList">
+        UPDATE course_selection_list
+        SET selection_id = #{selection_id},
+            course_id = #{course_id}
+        WHERE list_id = #{list_id}
+    </update>
+
+    <!-- 删除选课详情 -->
+    <delete id="deleteCourseSelectionList" parameterType="int">
+        DELETE FROM course_selection_list WHERE list_id = #{list_id}
+    </delete>
+</mapper>

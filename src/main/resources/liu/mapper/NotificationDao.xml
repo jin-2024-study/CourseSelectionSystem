@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="liu.dao.NotificationDao">
+    
+    <!-- 结果映射 -->
+    <resultMap id="NotificationResultMap" type="liu.entity.CourseSelectionNotification">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentNumber" column="student_number"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="message" column="message"/>
+        <result property="courseInfo" column="course_info"/>
+        <result property="academicYear" column="academic_year"/>
+        <result property="semester" column="semester"/>
+        <result property="timestamp" column="timestamp"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 保存通知到数据库 -->
+    <insert id="insertNotification" 
+            parameterType="liu.entity.CourseSelectionNotification" 
+            useGeneratedKeys="true" 
+            keyProperty="id">
+        INSERT INTO notification (
+            student_id, student_name, student_number, type, title, message,
+            course_info, academic_year, semester, timestamp, created_at
+        ) VALUES (
+            #{studentId}, #{studentName}, #{studentNumber}, #{type}, #{title}, #{message},
+            #{courseInfo}, #{academicYear}, #{semester}, #{timestamp}, NOW()
+        )
+    </insert>
+
+    <!-- 根据ID获取通知 -->
+    <select id="getNotificationById" 
+            parameterType="long" 
+            resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        WHERE id = #{id}
+    </select>
+
+    <!-- 获取指定学生的通知列表 -->
+    <select id="getNotificationsByStudentId" resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        WHERE student_id = #{studentId}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取所有通知（用于管理员查看） -->
+    <select id="getAllNotifications" resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取广播通知（学生ID为null的通知） -->
+    <select id="getBroadcastNotifications" resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        WHERE student_id IS NULL
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 获取最近的通知（分页） -->
+    <select id="getRecentNotifications" resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 更新通知信息 -->
+    <update id="updateNotification" parameterType="liu.entity.CourseSelectionNotification">
+        UPDATE notification
+        SET student_id = #{studentId},
+            student_name = #{studentName},
+            student_number = #{studentNumber},
+            type = #{type},
+            title = #{title},
+            message = #{message},
+            course_info = #{courseInfo},
+            academic_year = #{academicYear},
+            semester = #{semester},
+            timestamp = #{timestamp}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除指定学生的通知 -->
+    <delete id="deleteNotificationsByStudentId" parameterType="int">
+        DELETE FROM notification WHERE student_id = #{studentId}
+    </delete>
+
+    <!-- 删除指定通知 -->
+    <delete id="deleteNotificationById" parameterType="long">
+        DELETE FROM notification WHERE id = #{id}
+    </delete>
+
+    <!-- 清空所有通知 -->
+    <delete id="clearAllNotifications">
+        DELETE FROM notification
+    </delete>
+
+    <!-- 统计指定学生的通知数量 -->
+    <select id="countNotificationsByStudentId" 
+            parameterType="int" 
+            resultType="int">
+        SELECT COUNT(*)
+        FROM notification
+        WHERE student_id = #{studentId}
+    </select>
+
+    <!-- 简化的动态查询通知 -->
+    <select id="findNotifications" resultMap="NotificationResultMap">
+        SELECT id, student_id, student_name, student_number, type, title, message,
+               course_info, academic_year, semester, timestamp, created_at
+        FROM notification
+        WHERE 1=1
+        <if test="studentId != null">
+            AND student_id = #{studentId}
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="academicYear != null and academicYear != ''">
+            AND academic_year = #{academicYear}
+        </if>
+        <if test="semester != null and semester != ''">
+            AND semester = #{semester}
+        </if>
+        <if test="startDate != null">
+            AND created_at >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND created_at &lt;= #{endDate}
+        </if>
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 批量插入通知 -->
+    <insert id="batchInsertNotifications" parameterType="list">
+        INSERT INTO notification (
+            student_id, student_name, student_number, type, title, message,
+            course_info, academic_year, semester, timestamp, created_at
+        ) VALUES
+        <foreach collection="list" item="notification" separator=",">
+            (
+                #{notification.studentId}, #{notification.studentName}, #{notification.studentNumber}, 
+                #{notification.type}, #{notification.title}, #{notification.message},
+                #{notification.courseInfo}, #{notification.academicYear}, #{notification.semester}, 
+                #{notification.timestamp}, NOW()
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据条件删除通知 -->
+    <delete id="deleteNotificationsByCondition">
+        DELETE FROM notification
+        WHERE 1=1
+        <if test="studentId != null">
+            AND student_id = #{studentId}
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="academicYear != null and academicYear != ''">
+            AND academic_year = #{academicYear}
+        </if>
+        <if test="semester != null and semester != ''">
+            AND semester = #{semester}
+        </if>
+        <if test="beforeDate != null">
+            AND created_at &lt; #{beforeDate}
+        </if>
+    </delete>
+
+</mapper> 

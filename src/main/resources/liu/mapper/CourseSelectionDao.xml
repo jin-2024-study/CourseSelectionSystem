@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="liu.dao.CourseSelectionDao">
+    <!-- 基本的结果映射 -->
+    <resultMap id="BaseResultMap" type="liu.entity.CourseSelection">
+        <id column="selection_id" property="selection_id"/>
+        <result column="student_id" property="student_id"/>
+        <result column="academic_year" property="academic_year"/>
+        <result column="semester" property="semester"/>
+    </resultMap>
+    
+    <!-- 懒加载学生信息的结果映射 -->
+    <resultMap id="CourseSelectionLazyLoadMap" type="liu.entity.CourseSelection" extends="BaseResultMap">
+        <!-- 懒加载学生信息 -->
+        <association property="student" 
+                     javaType="liu.entity.Student"
+                     select="liu.dao.StudentDao.getStudentById"
+                     column="student_id"
+                     fetchType="lazy">
+        </association>
+        
+        <!-- 懒加载选课明细列表 -->
+        <collection property="courseSelectionLists"
+                    ofType="liu.entity.CourseSelectionList"
+                    select="liu.dao.CourseSelectionListDao.getListBySelectionId"
+                    column="selection_id"
+                    fetchType="lazy">
+        </collection>
+    </resultMap>
+    
+    <!-- 根据一对一进行查询 -->
+    <resultMap id="CourseSelectionAndStudentInfo" type="liu.entity.CourseSelection">
+        <id column="selection_id" property="selection_id"/>
+        <result column="student_id" property="student_id"/>
+        <result column="academic_year" property="academic_year"/>
+        <result column="semester" property="semester"/>
+
+        <association property="student" javaType="liu.entity.Student">
+            <id column="student_id" property="student_id"/>
+            <result column="student_number" property="student_number"/>
+            <result column="student_name" property="student_name"/>
+            <result column="college" property="college"/>
+            <result column="enrollment_date" property="enrollment_date"/>
+        </association>
+    </resultMap>
+
+    <select id="findCourseSelectionStudent" resultMap="CourseSelectionAndStudentInfo">
+        select course_selection.*,student.student_name,student.student_number,student.college,student.enrollment_date
+        from course_selection
+        right join student on course_selection.student_id = student.student_id
+    </select>
+
+    <!--    一对多进行查询-->
+    <resultMap id="CourseSelectionAndListInfo" type="liu.entity.CourseSelection">
+        <id column="selection_id" property="selection_id"/>
+        <result column="student_id" property="student_id"/>
+        <result column="academic_year" property="academic_year"/>
+        <result column="semester" property="semester"/>
+        
+        <association property="student" javaType="liu.entity.Student">
+            <id column="student_id" property="student_id"/>
+            <result column="student_number" property="student_number"/>
+            <result column="student_name" property="student_name"/>
+            <result column="college" property="college"/>
+            <result column="enrollment_date" property="enrollment_date"/>
+        </association>
+
+        <collection property="courseSelectionLists"  ofType="liu.entity.CourseSelectionList">
+            <id column="list_id" property="list_id"/>
+            <result column="selection_id" property="selection_id"/>
+            <result column="course_id" property="course_id"/>
+            
+            <association property="course" javaType="liu.entity.Course">
+                <id column="course_id" property="course_id"/>
+                <result column="course_code" property="course_code"/>
+                <result column="course_name" property="course_name"/>
+                <result column="course_type" property="course_type"/>
+                <result column="course_semester" property="semester"/>
+                <result column="credit_hours" property="credit_hours"/>
+                <result column="credits" property="credits"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <select id="findCourseSelectionAndList" resultMap="CourseSelectionAndListInfo">
+        SELECT e.*,
+               s.student_id, s.student_number, s.student_name, s.college, s.enrollment_date,
+               ed.list_id, ed.selection_id, ed.course_id,
+               c.course_id, c.course_code, c.course_name, c.course_type, c.semester as course_semester, 
+               c.credit_hours, c.credits
+        FROM course_selection e
+        JOIN student s ON e.student_id = s.student_id
+        LEFT JOIN course_selection_list ed ON e.selection_id = ed.selection_id
+        LEFT JOIN course c ON ed.course_id = c.course_id
+        ORDER BY e.selection_id, ed.list_id
+    </select>
+
+
+    <!-- 根据ID查询选课记录 -->
+    <select id="getCourseSelectionById" parameterType="int" resultMap="CourseSelectionLazyLoadMap">
+        SELECT * FROM course_selection WHERE selection_id = #{selection_id}
+    </select>
+    
+    <!-- 获取所有选课记录 -->
+    <select id="getAllCourseSelection" resultMap="CourseSelectionLazyLoadMap">
+        SELECT * FROM course_selection
+    </select>
+    
+    <!-- 根据学生ID查询选课记录 -->
+    <select id="getCourseSelectionByStudentId" parameterType="int" resultMap="CourseSelectionLazyLoadMap">
+        SELECT * FROM course_selection WHERE student_id = #{studentId}
+    </select>
+
+
+    <!-- 添加选课记录 -->
+    <insert id="insertCourseSelection" parameterType="liu.entity.CourseSelection" useGeneratedKeys="true" keyProperty="selection_id">
+        INSERT INTO course_selection (student_id, academic_year, semester)
+        VALUES (#{student_id}, #{academic_year}, #{semester})
+    </insert>
+
+
+    <!-- 更新选课记录 -->
+    <update id="updateCourseSelection" parameterType="liu.entity.CourseSelection">
+        UPDATE course_selection
+        SET student_id = #{student_id},
+            academic_year = #{academic_year},
+            semester = #{semester}
+        WHERE selection_id = #{selection_id}
+    </update>
+
+
+    <!-- 删除选课记录 -->
+    <delete id="deleteCourseSelection" parameterType="int">
+        DELETE FROM course_selection WHERE selection_id = #{selection_id}
+    </delete>
+</mapper>

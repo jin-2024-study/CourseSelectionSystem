@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="liu.dao.StudentDao">
+
+    <!-- 使用懒加载的结果映射 -->
+    <resultMap id="StudentLazyLoadMap" type="liu.entity.Student" extends="BaseResultMap">
+        <!-- 使用懒加载方式加载选课信息 -->
+        <collection property="courseSelections"
+                    ofType="liu.entity.CourseSelection"
+                    select="liu.dao.CourseSelectionDao.getCourseSelectionByStudentId"
+                    column="student_id"
+                    fetchType="lazy">
+        </collection>
+    </resultMap>
+
+    <!-- 基本的结果映射 -->
+    <resultMap id="BaseResultMap" type="liu.entity.Student">
+        <id column="student_id" property="student_id"/>
+        <result column="student_number" property="student_number"/>
+        <result column="student_name" property="student_name"/>
+        <result column="college" property="college"/>
+        <result column="enrollment_date" property="enrollment_date"/>
+        <result column="photo_path" property="photo_path"/>
+    </resultMap>
+
+
+
+    <!-- 根据多对多进行查询 -->
+    <resultMap id="StudentAndCourseResultMap" type="liu.entity.Student">
+        <id column="student_id" property="student_id"/>
+        <result column="student_number" property="student_number"/>
+        <result column="student_name" property="student_name"/>
+        <result column="college" property="college"/>
+        <result column="enrollment_date" property="enrollment_date"/>
+        <result column="photo_path" property="photo_path"/>
+
+        <!--        一个学生有多个选课表-->
+        <collection property="courseSelections" ofType="liu.entity.CourseSelection">
+            <id column="selection_id" property="selection_id"/>
+            <result column="student_id" property="student_id"/>
+            <result column="academic_year" property="academic_year"/>
+            <result column="semester" property="semester"/>
+
+            <collection property="courseSelectionLists" ofType="liu.entity.CourseSelectionList">
+                <id column="list_id" property="list_id"/>
+                <result column="selection_id" property="selection_id"/>
+                <result column="course_id" property="course_id"/>
+
+                <association property="course" javaType="liu.entity.Course">
+                    <id column="course_id" property="course_id"/>
+                    <result column="course_code" property="course_code"/>
+                    <result column="course_name" property="course_name"/>
+                    <result column="course_type" property="course_type"/>
+                    <result column="course_semester" property="semester"/>
+                    <result column="credit_hours" property="credit_hours"/>
+                    <result column="credits" property="credits"/>
+                </association>
+            </collection>
+        </collection>
+     </resultMap>
+
+    <!-- 使用懒加载方式查询所有学生 -->
+    <select id="getAllStudentsLazy" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student
+    </select>
+
+    <select id="findStudentAndCourseResultMap" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student
+    </select>
+
+    <!-- 新增查询方法 -->
+    <select id="getStudentById" parameterType="int" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student WHERE student_id = #{studentId}
+    </select>
+    
+    <select id="getAllStudents" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student
+    </select>
+    
+    <select id="getStudentByNumber" parameterType="string" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student WHERE student_number = #{studentNumber}
+    </select>
+    
+    <select id="getStudentsByCollege" parameterType="string" resultMap="StudentLazyLoadMap">
+        SELECT * FROM student WHERE college = #{college}
+    </select>
+    
+    <!-- 添加学生 -->
+    <insert id="insertStudent" parameterType="liu.entity.Student" useGeneratedKeys="true" keyProperty="student_id">
+        INSERT INTO student (student_number, student_name, college, enrollment_date, photo_path)
+        VALUES (#{student_number}, #{student_name}, #{college}, #{enrollment_date}, #{photo_path})
+    </insert>
+    
+    <!-- 更新学生信息 -->
+    <update id="updateStudent" parameterType="liu.entity.Student">
+        UPDATE student
+        SET student_number = #{student_number},
+            student_name = #{student_name},
+            college = #{college},
+            enrollment_date = #{enrollment_date},
+            photo_path = #{photo_path}
+        WHERE student_id = #{student_id}
+    </update>
+    
+    <!-- 删除学生 -->
+    <delete id="deleteStudent" parameterType="int">
+        DELETE FROM student WHERE student_id = #{studentId}
+    </delete>
+</mapper>

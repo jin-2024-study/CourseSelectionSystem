@@ -1,0 +1,31 @@
+/* 学生选课详情页面特定样式 */
+h1, h2 {
+    margin-top: 30px;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 28px;
+}
+
+h2 {
+    font-size: 22px;
+}
+
+.back-link a {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.back-link a:before {
+    content: '←';
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.back-link a:hover {
+    color: #0b7dda;
+    transform: translateX(-3px);
+} 

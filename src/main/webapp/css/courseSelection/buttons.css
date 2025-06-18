@@ -1,0 +1,136 @@
+/* 统一按钮基础样式 */
+.btn-base {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+}
+
+/* 主要按钮样式 - 绿色 */
+.btn-primary {
+    background-color: #4CAF50;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #45a049;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+/* 危险按钮样式 - 红色 */
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+/* 信息按钮样式 - 蓝色 */
+.btn-info {
+    background-color: #2196F3;
+    color: white;
+}
+.btn-info:hover {
+    background-color: #0b7dda;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+/* 小按钮样式 */
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* 大按钮样式 */
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 16px;
+}
+
+/* 操作列中的按钮样式 */
+.edit-link {
+    color: #fff;
+    background-color: #2196F3;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    margin-right: 5px;
+}
+.edit-link:hover {
+    background-color: #0b7dda;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-decoration: none !important;
+}
+.delete-link {
+    color: #fff;
+    background-color: #f44336;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+.delete-link:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-decoration: none !important;
+}
+
+/* 编辑和删除按钮样式 */
+.edit-btn {
+    background-color: #2196F3;
+    color: white;
+}
+.edit-btn:hover {
+    background-color: #0b7dda;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+.delete-btn:hover {
+    background-color: #d32f2f;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* 返回按钮样式 */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #2196F3;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+.back-btn:before {
+    content: '←';
+    margin-right: 8px;
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.3s ease;
+}
+.back-btn:hover {
+    background-color: #e9ecef;
+    color: #0b7dda;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.back-btn:hover:before {
+    transform: translateX(-3px);
+} 
