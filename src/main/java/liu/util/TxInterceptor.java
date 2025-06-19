@@ -1,5 +1,7 @@
 package liu.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.aop.MethodBeforeAdvice;
 import org.springframework.aop.ThrowsAdvice;
@@ -18,6 +20,8 @@ import java.lang.reflect.Method;
 @Component
 public class TxInterceptor implements MethodBeforeAdvice, AfterReturningAdvice, ThrowsAdvice {
     
+    private static final Logger logger = LoggerFactory.getLogger(TxInterceptor.class);
+    
     @Autowired
     private DataSourceTransactionManager transactionManager;
     
@@ -32,7 +36,7 @@ public class TxInterceptor implements MethodBeforeAdvice, AfterReturningAdvice, 
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = transactionManager.getTransaction(def);
         transactionStatusThreadLocal.set(status);
-        System.out.println("开启事务: " + method.getName());
+        logger.info("开启事务: {}", method.getName());
     }
     
     /**
@@ -44,7 +48,7 @@ public class TxInterceptor implements MethodBeforeAdvice, AfterReturningAdvice, 
         if (status != null) {
             transactionManager.commit(status);
             transactionStatusThreadLocal.remove();
-            System.out.println("提交事务: " + method.getName());
+            logger.info("提交事务: {}", method.getName());
         }
     }
     
@@ -56,7 +60,7 @@ public class TxInterceptor implements MethodBeforeAdvice, AfterReturningAdvice, 
         if (status != null) {
             transactionManager.rollback(status);
             transactionStatusThreadLocal.remove();
-            System.out.println("回滚事务: " + method.getName() + ", 异常: " + ex.getMessage());
+            logger.warn("回滚事务: {}, 异常: {}", method.getName(), ex.getMessage());
         }
     }
 } 

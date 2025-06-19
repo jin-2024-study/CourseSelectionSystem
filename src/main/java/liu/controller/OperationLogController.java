@@ -2,7 +2,7 @@ package liu.controller;
 
 import liu.entity.OperationLog;
 import liu.service.OperationLogService;
-import liu.utils.RedisUtils;
+import liu.util.RedisUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -85,15 +85,6 @@ public class OperationLogController {
         return "logs/list";
     }
 
-    /**
-     * 查看日志详情
-     */
-    @GetMapping("/detail")
-    public String detail(@RequestParam("logId") Integer logId, Model model) {
-        OperationLog log = operationLogService.findById(logId);
-        model.addAttribute("log", log);
-        return "logs/detail";
-    }
 
     /**
      * 简单测试页面

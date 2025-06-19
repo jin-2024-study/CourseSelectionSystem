@@ -3,6 +3,8 @@ package liu.controller;
 import liu.entity.Student;
 import liu.service.FileService;
 import liu.service.StudentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -22,9 +25,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * 学生照片控制器
+ * 处理学生照片的上传、查看、下载等功能
+ */
 @Controller
 @RequestMapping("/students/{studentId}/photo")
 public class StudentPhotoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(StudentPhotoController.class);
 
     @Autowired
     private StudentService studentService;
@@ -53,55 +62,55 @@ public class StudentPhotoController {
     public String handlePhotoUpload(@PathVariable Integer studentId,
                                    @RequestParam("photo") MultipartFile photo,
                                    RedirectAttributes redirectAttributes) {
-        System.out.println("开始处理学生照片上传请求，学生ID: " + studentId);
-        System.out.println("上传的文件名: " + photo.getOriginalFilename());
-        System.out.println("文件大小: " + photo.getSize() + " 字节");
-        System.out.println("文件类型: " + photo.getContentType());
-        
         try {
+            logger.info("开始处理学生照片上传请求，学生ID: {}", studentId);
+            logger.debug("上传的文件名: {}", photo.getOriginalFilename());
+            logger.debug("文件大小: {} 字节", photo.getSize());
+            logger.debug("文件类型: {}", photo.getContentType());
+            
             // 获取学生信息
             Student student = studentService.getStudentById(studentId);
             if (student == null) {
-                System.err.println("学生不存在，ID: " + studentId);
+                logger.error("学生不存在，ID: {}", studentId);
                 redirectAttributes.addFlashAttribute("error", "学生不存在");
                 return "redirect:/courseSelection";
             }
-            System.out.println("获取到学生信息: " + student);
-            System.out.println("当前照片路径: " + student.getPhoto_path());
+            logger.debug("获取到学生信息: {}", student);
+            logger.debug("当前照片路径: {}", student.getPhoto_path());
             
             // 如果学生已有照片，删除原来的照片
             if (student.getPhoto_path() != null && !student.getPhoto_path().isEmpty()) {
-                System.out.println("准备删除原照片: " + student.getPhoto_path());
+                logger.debug("准备删除原照片: {}", student.getPhoto_path());
                 boolean deleted = fileService.deleteFile(student.getPhoto_path());
-                System.out.println("原照片删除结果: " + (deleted ? "成功" : "失败"));
+                logger.debug("原照片删除结果: {}", deleted ? "成功" : "失败");
             }
             
             // 保存新照片
-            System.out.println("准备保存新照片");
+            logger.debug("准备保存新照片");
             String photoPath = fileService.saveStudentPhoto(studentId, photo);
-            System.out.println("新照片保存路径: " + photoPath);
+            logger.info("新照片保存路径: {}", photoPath);
             
             // 更新学生信息
-            System.out.println("准备更新学生信息 - 添加照片路径");
+            logger.debug("准备更新学生信息 - 添加照片路径");
             student.setPhoto_path(photoPath);
             boolean updateResult = studentService.updateStudent(student);
-            System.out.println("学生信息更新结果: " + (updateResult ? "成功" : "失败"));
+            logger.debug("学生信息更新结果: {}", updateResult ? "成功" : "失败");
             
             if (!updateResult) {
-                System.err.println("数据库更新失败");
+                logger.error("数据库更新失败");
                 redirectAttributes.addFlashAttribute("error", "照片上传成功，但数据库更新失败");
                 return "redirect:/students/" + studentId + "/photo/upload";
             }
             
             // 重新查询学生信息，确认照片路径已更新
             Student updatedStudent = studentService.getStudentById(studentId);
-            System.out.println("更新后的学生照片路径: " + (updatedStudent != null ? updatedStudent.getPhoto_path() : "null"));
+            logger.debug("更新后的学生照片路径: {}", 
+                    updatedStudent != null ? updatedStudent.getPhoto_path() : "null");
             
             redirectAttributes.addFlashAttribute("success", "照片上传成功");
             return "redirect:/students/" + studentId;
         } catch (IOException e) {
-            System.err.println("照片上传过程中发生错误: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("照片上传过程中发生错误: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "照片上传失败: " + e.getMessage());
             return "redirect:/students/" + studentId + "/photo/upload";
         }
@@ -112,26 +121,26 @@ public class StudentPhotoController {
      */
     @GetMapping
     public ResponseEntity<Resource> viewStudentPhoto(@PathVariable Integer studentId) {
-        System.out.println("接收到查看学生照片请求，学生ID: " + studentId);
         try {
+            logger.debug("接收到查看学生照片请求，学生ID: {}", studentId);
             // 获取学生信息
             Student student = studentService.getStudentById(studentId);
             if (student == null) {
-                System.err.println("学生不存在，ID: " + studentId);
+                logger.error("学生不存在，ID: {}", studentId);
                 return ResponseEntity.notFound().build();
             }
             
-            System.out.println("获取到学生信息: " + student);
-            System.out.println("照片路径: " + student.getPhoto_path());
+            logger.debug("获取到学生信息: {}", student);
+            logger.debug("照片路径: {}", student.getPhoto_path());
             
             // 检查照片路径
             if (student.getPhoto_path() == null || student.getPhoto_path().isEmpty()) {
-                System.err.println("学生无照片");
+                logger.warn("学生无照片");
                 return ResponseEntity.notFound().build();
             }
             
             // 获取照片资源
-            System.out.println("准备获取照片资源: " + student.getPhoto_path());
+            logger.debug("准备获取照片资源: {}", student.getPhoto_path());
             Resource resource;
             try {
                 // 使用FileService获取照片
@@ -139,28 +148,26 @@ public class StudentPhotoController {
                 
                 // 检查资源是否存在
                 if (resource == null || !resource.exists()) {
-                    System.err.println("照片文件不存在: " + student.getPhoto_path());
+                    logger.error("照片文件不存在: {}", student.getPhoto_path());
                     return ResponseEntity.notFound().build();
                 }
                 
             } catch (IOException e) {
-                System.err.println("无法获取照片资源: " + e.getMessage());
-                e.printStackTrace();
+                logger.error("无法获取照片资源: {}", e.getMessage(), e);
                 return ResponseEntity.notFound().build();
             }
             
-            System.out.println("照片文件存在，文件名: " + resource.getFilename());
+            logger.debug("照片文件存在，文件名: {}", resource.getFilename());
             
             String contentType = determineContentType(resource.getFilename());
-            System.out.println("设置Content-Type: " + contentType);
+            logger.debug("设置Content-Type: {}", contentType);
             
             // 返回照片资源
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
         } catch (Exception e) {
-            System.err.println("查看照片时发生错误: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("查看照片时发生错误: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -180,7 +187,7 @@ public class StudentPhotoController {
             try {
                 resource = fileService.downloadFile(student.getPhoto_path());
             } catch (IOException e) {
-                System.err.println("无法下载照片: " + e.getMessage());
+                logger.error("无法下载照片: {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
             
@@ -202,8 +209,7 @@ public class StudentPhotoController {
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(resource);
         } catch (Exception e) {
-            System.err.println("下载照片时发生错误: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("下载照片时发生错误: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

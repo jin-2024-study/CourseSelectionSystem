@@ -19,19 +19,4 @@ public interface CustomUserDetailsService extends UserDetailsService {
      */
     @Override
     UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
-
-    /**
-     * 根据用户名验证用户是否存在且启用
-     * @param username 用户名
-     * @return boolean 用户是否有效
-     */
-    boolean isUserValid(String username);
-
-    /**
-     * 刷新用户权限信息
-     * @param username 用户名
-     * @return UserDetails 更新后的用户详情
-     * @throws UsernameNotFoundException 用户不存在异常
-     */
-    UserDetails refreshUserAuthorities(String username) throws UsernameNotFoundException;
 } 

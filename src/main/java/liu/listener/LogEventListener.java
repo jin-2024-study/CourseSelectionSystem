@@ -2,6 +2,8 @@ package liu.listener;
 
 import liu.event.LogEvent;
 import liu.service.OperationLogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LogEventListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(LogEventListener.class);
 
     @Autowired
     private OperationLogService operationLogService;
@@ -25,10 +29,9 @@ public class LogEventListener {
         try {
             // 保存操作日志到数据库
             operationLogService.save(logEvent.getOperationLog());
-            System.out.println("操作日志已记录: " + logEvent.getOperationLog().toString());
+            logger.info("操作日志已记录: {}", logEvent.getOperationLog().toString());
         } catch (Exception e) {
-            System.err.println("保存操作日志失败: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("保存操作日志失败: {}", e.getMessage(), e);
         }
     }
 } 

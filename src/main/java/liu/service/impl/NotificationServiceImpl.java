@@ -1,6 +1,5 @@
 package liu.service.impl;
 
-import liu.config.ActiveMQConfig;
 import liu.dao.NotificationDao;
 import liu.entity.Course;
 import liu.entity.CourseSelectionNotification;

@@ -6,8 +6,9 @@ import liu.service.StudentService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -30,6 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.apache.poi.ss.usermodel.BorderStyle.*;
+
 /**
  * 学生管理控制器类
  * 提供学生信息的增删改查、搜索、分页、导出等功能
@@ -40,18 +43,17 @@ import java.util.stream.Collectors;
  * @since 2025
  */
 @Controller
-@RequestMapping("/students")
+@RequestMapping("students")
 @PreAuthorize("hasRole('ADMIN')")
 public class StudentController {
+
+    private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
 
     @Autowired
     private StudentService studentService;
 
     @Autowired
     private FileService fileService;
-
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
 
     /**
      * 数据绑定初始化器
@@ -84,12 +86,9 @@ public class StudentController {
         
         if (keyword != null && !keyword.trim().isEmpty()) {
             filteredStudents = allStudents.stream()
-                .filter(student -> {
-                    boolean matches = student.getStudent_number().toLowerCase().contains(keyword.toLowerCase()) ||
-                                    student.getStudent_name().toLowerCase().contains(keyword.toLowerCase()) ||
-                                    student.getCollege().toLowerCase().contains(keyword.toLowerCase());
-                    return matches;
-                })
+                .filter(student -> student.getStudent_number().toLowerCase().contains(keyword.toLowerCase()) ||
+                                student.getStudent_name().toLowerCase().contains(keyword.toLowerCase()) ||
+                                student.getCollege().toLowerCase().contains(keyword.toLowerCase()))
                 .collect(Collectors.toList());
         }
         
@@ -168,93 +167,88 @@ public class StudentController {
         if (bindingResult.hasErrors()) {
             return "student/add";
         }
-        
         try {
-            System.out.println("===== 开始添加学生流程 =====");
-            System.out.println("收到的学生对象: " + student);
-            System.out.println("请求内容类型: " + request.getContentType());
-            System.out.println("请求方法: " + request.getMethod());
-            System.out.println("请求参数名: " + java.util.Collections.list(request.getParameterNames()));
-            
+            logger.info("===== 开始添加学生流程 =====");
+            logger.debug("收到的学生对象: {}", student);
+            logger.debug("请求内容类型: {}", request.getContentType());
+            logger.debug("请求方法: {}", request.getMethod());
+            logger.debug("请求参数名: {}", java.util.Collections.list(request.getParameterNames()));
+
             // 检查是否是multipart请求
-            if (request instanceof org.springframework.web.multipart.MultipartHttpServletRequest) {
-                org.springframework.web.multipart.MultipartHttpServletRequest multipartRequest = 
-                    (org.springframework.web.multipart.MultipartHttpServletRequest) request;
-                System.out.println("这是一个multipart请求");
-                System.out.println("文件参数名: " + multipartRequest.getFileNames());
-                System.out.println("所有文件: " + multipartRequest.getFileMap());
+            if (request instanceof org.springframework.web.multipart.MultipartHttpServletRequest multipartRequest) {
+                logger.debug("这是一个multipart请求");
+                logger.debug("文件参数名: {}", multipartRequest.getFileNames());
+                logger.debug("所有文件: {}", multipartRequest.getFileMap());
             } else {
-                System.out.println("这不是一个multipart请求！");
+                logger.debug("这不是一个multipart请求！");
             }
             
-            System.out.println("MultipartFile photo 对象: " + photo);
-            System.out.println("photo != null: " + (photo != null));
+            logger.debug("MultipartFile photo 对象: {}", photo);
+            logger.debug("photo != null: {}", (photo != null));
             if (photo != null) {
-                System.out.println("photo.isEmpty(): " + photo.isEmpty());
-                System.out.println("photo.getSize(): " + photo.getSize());
-                System.out.println("photo.getOriginalFilename(): " + photo.getOriginalFilename());
-                System.out.println("photo.getContentType(): " + photo.getContentType());
+                logger.debug("photo.isEmpty(): {}", photo.isEmpty());
+                logger.debug("photo.getSize(): {}", photo.getSize());
+                logger.debug("photo.getOriginalFilename(): {}", photo.getOriginalFilename());
+                logger.debug("photo.getContentType(): {}", photo.getContentType());
             }
-            System.out.println("是否有照片: " + (photo != null && !photo.isEmpty()));
+            logger.debug("是否有照片: {}", (photo != null && !photo.isEmpty()));
             
             if (photo != null && !photo.isEmpty()) {
-                System.out.println("照片信息: " + photo.getOriginalFilename() + ", 大小: " + photo.getSize());
+                logger.info("照片信息: {}, 大小: {}", photo.getOriginalFilename(), photo.getSize());
                 
                 // 方案1：先插入学生，再保存照片，再更新
-                System.out.println("--- 执行方案1：先插入再更新 ---");
+                logger.info("--- 执行方案1：先插入再更新 ---");
                 
-                // 步骤1：先插入学生基本信息获取ID
-                System.out.println("步骤1：插入学生基本信息");
+                // 步骤1：先插入学生基本信息
+                logger.debug("步骤1：插入学生基本信息");
                 boolean insertResult = studentService.insertStudent(student);
-                System.out.println("插入结果: " + insertResult + ", 获得ID: " + student.getStudent_id());
+                logger.debug("插入结果: {}, 获得ID: {}", insertResult, student.getStudent_id());
                 
                 if (!insertResult || student.getStudent_id() <= 0) {
-                    throw new RuntimeException("学生基本信息插入失败，ID: " + student.getStudent_id());
+                    throw new RuntimeException("插入学生基本信息失败");
                 }
                 
                 // 步骤2：保存照片
-                System.out.println("步骤2：保存照片，使用学生ID: " + student.getStudent_id());
+                logger.debug("步骤2：保存照片，使用学生ID: {}", student.getStudent_id());
                 String photoPath = fileService.saveStudentPhoto(student.getStudent_id(), photo);
-                System.out.println("照片保存路径: " + photoPath);
+                logger.info("照片保存路径: {}", photoPath);
                 
-                // 步骤3：更新学生的照片路径
-                System.out.println("步骤3：更新学生照片路径");
+                // 步骤3：更新学生照片路径
+                logger.debug("步骤3：更新学生照片路径");
                 student.setPhoto_path(photoPath);
                 boolean updateResult = studentService.updateStudent(student);
-                System.out.println("更新结果: " + updateResult);
+                logger.debug("更新结果: {}", updateResult);
                 
                 if (!updateResult) {
-                    throw new RuntimeException("照片路径更新失败");
+                    throw new RuntimeException("更新学生照片路径失败");
                 }
                 
-                // 验证最终结果
+                // 最终验证
                 Student finalStudent = studentService.getStudentById(student.getStudent_id());
-                System.out.println("最终验证结果: " + finalStudent);
+                logger.debug("最终验证结果: {}", finalStudent);
                 
             } else {
-                System.out.println("--- 执行无照片流程 ---");
-                // 没有照片，直接插入
+                logger.info("--- 执行无照片流程 ---");
+                // 无照片直接插入
                 boolean insertResult = studentService.insertStudent(student);
-                System.out.println("插入结果: " + insertResult + ", 获得ID: " + student.getStudent_id());
+                logger.debug("插入结果: {}, 获得ID: {}", insertResult, student.getStudent_id());
                 
                 if (!insertResult) {
-                    throw new RuntimeException("学生信息插入失败");
+                    throw new RuntimeException("插入学生信息失败");
                 }
                 
                 // 验证插入结果
                 Student verifyStudent = studentService.getStudentById(student.getStudent_id());
-                System.out.println("验证查询结果: " + verifyStudent);
+                logger.debug("验证查询结果: {}", verifyStudent);
             }
             
-            System.out.println("===== 学生添加流程完成 =====");
-            redirectAttributes.addFlashAttribute("success", "学生添加成功！");
+            logger.info("===== 学生添加流程完成 =====");
+            redirectAttributes.addFlashAttribute("success", "学生添加成功");
             return "redirect:/students";
-            
         } catch (Exception e) {
-            System.err.println("===== 添加学生失败 =====");
-            System.err.println("错误信息: " + e.getMessage());
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "添加失败: " + e.getMessage());
+            logger.error("===== 添加学生失败 =====");
+            logger.error("错误信息: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "添加学生失败: " + e.getMessage());
             return "redirect:/students/add";
         }
     }
@@ -284,7 +278,6 @@ public class StudentController {
      * @param bindingResult 数据绑定结果，包含验证错误信息
      * @param photo 上传的新学生照片文件（可选）
      * @param redirectAttributes 重定向属性，用于传递消息
-     * @param model 模型对象，用于在验证失败时传递数据
      * @return 成功时重定向到学生列表页面，失败时返回编辑表单页面
      */
     @PostMapping("/{id}/update")
@@ -292,22 +285,12 @@ public class StudentController {
                       @Valid @ModelAttribute Student student,
                       BindingResult bindingResult,
                       @RequestParam(value = "photo", required = false) MultipartFile photo,
-                      RedirectAttributes redirectAttributes,
-                      Model model) {
-        
-
-        if (bindingResult.hasErrors()) {
-            System.out.println("Errors: " + bindingResult.getAllErrors());
-        }
+                      RedirectAttributes redirectAttributes) {
         
         if (bindingResult.hasErrors()) {
-            // 重新加载学生信息以显示错误页面
-            Student existingStudent = studentService.getStudentById(id);
-            if (existingStudent != null) {
-                model.addAttribute("student", existingStudent);
-            }
+            logger.debug("表单验证错误: {}", bindingResult.getAllErrors());
             redirectAttributes.addFlashAttribute("error", "表单验证失败，请检查输入的数据");
-            return "student/edit";
+            return "redirect:/students/" + id + "/edit";
         }
         
         try {
@@ -317,25 +300,25 @@ public class StudentController {
                 return "redirect:/students";
             }
             
-            System.out.println("Existing Student: " + existingStudent);
+            logger.debug("现有学生信息: {}", existingStudent);
             
             // 处理照片上传
             if (photo != null && !photo.isEmpty()) {
-                System.out.println("开始上传新照片: " + photo.getOriginalFilename());
+                logger.info("开始上传新照片: {}", photo.getOriginalFilename());
                 
                 // 如果已有照片，先删除原照片
                 if (existingStudent.getPhoto_path() != null && !existingStudent.getPhoto_path().isEmpty()) {
-                    System.out.println("准备删除原照片: " + existingStudent.getPhoto_path());
+                    logger.debug("准备删除原照片: {}", existingStudent.getPhoto_path());
                     boolean deleted = fileService.deleteFile(existingStudent.getPhoto_path());
-                    System.out.println("原照片删除结果: " + (deleted ? "成功" : "失败"));
+                    logger.debug("原照片删除结果: {}", deleted ? "成功" : "失败");
                 }
                 
                 // 保存新照片
                 String photoPath = fileService.saveStudentPhoto(id, photo);
-                System.out.println("新照片保存完成，路径: " + photoPath);
+                logger.info("新照片保存完成，路径: {}", photoPath);
                 student.setPhoto_path(photoPath);
             } else {
-                System.out.println("未上传新照片，保持原有路径: " + existingStudent.getPhoto_path());
+                logger.debug("未上传新照片，保持原有路径: {}", existingStudent.getPhoto_path());
                 student.setPhoto_path(existingStudent.getPhoto_path());
             }
             
@@ -344,7 +327,7 @@ public class StudentController {
 
             // 执行更新
             boolean result = studentService.updateStudent(student);
-            System.out.println("Update result: " + result);
+            logger.debug("更新结果: {}", result);
             
             if (result) {
                 redirectAttributes.addFlashAttribute("success", "学生信息更新成功！");
@@ -354,7 +337,7 @@ public class StudentController {
             
             return "redirect:/students";
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("更新学生信息时发生错误: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "更新失败: " + e.getMessage());
             return "redirect:/students/" + id + "/edit";
         }
@@ -383,22 +366,17 @@ public class StudentController {
      * 将搜索参数重定向到列表页面，支持中文关键字的URL编码
      * 
      * @param keyword 搜索关键字
-     * @param model 模型对象
      * @return 重定向到带搜索参数的学生列表页面
      */
     @GetMapping("/search")
-    public String search(@RequestParam("keyword") String keyword, Model model) {
+    public String search(@RequestParam("keyword") String keyword) {
         try {
-
-            
-            String encodedKeyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8.toString());
-
+            String encodedKeyword = URLEncoder.encode(keyword, StandardCharsets.UTF_8);
             String redirectUrl = "redirect:/students?keyword=" + encodedKeyword;
-            System.out.println("Redirect URL: " + redirectUrl);
-
+            logger.debug("重定向URL: {}", redirectUrl);
             return redirectUrl;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("搜索重定向时发生错误: {}", e.getMessage(), e);
             return "redirect:/students?keyword=" + keyword;
         }
     }
@@ -474,13 +452,11 @@ public class StudentController {
         
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + 
-                          URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString()) + "\"");
+                          URLEncoder.encode(fileName, StandardCharsets.UTF_8) + "\"");
         
         workbook.write(response.getOutputStream());
         workbook.close();
     }
-
-
 
     /**
      * 为Excel单元格样式设置边框
@@ -488,9 +464,9 @@ public class StudentController {
      * @param style 要设置边框的单元格样式
      */
     private void setBorders(CellStyle style) {
-        style.setBorderTop(BorderStyle.THIN);
-        style.setBorderBottom(BorderStyle.THIN);
-        style.setBorderLeft(BorderStyle.THIN);
-        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderTop(THIN);
+        style.setBorderBottom(THIN);
+        style.setBorderLeft(THIN);
+        style.setBorderRight(THIN);
     }
 }

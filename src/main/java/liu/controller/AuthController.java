@@ -1,6 +1,8 @@
 package liu.controller;
 
 import liu.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Controller
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UserService userService;
@@ -129,19 +133,19 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
             // 记录登录日志（可选）
-            System.out.println("用户登录成功: " + username + ", IP: " + request.getRemoteAddr());
+            logger.info("用户登录成功: {}, IP: {}", username, request.getRemoteAddr());
             
             // 所有用户都重定向到dashboard页面，页面内部根据角色显示不同功能
             return "redirect:/admin/dashboard";
             
         } catch (AuthenticationException e) {
             // 认证失败
-            System.out.println("用户登录失败: " + username + ", 原因: " + e.getMessage());
+            logger.warn("用户登录失败: {}, 原因: {}", username, e.getMessage());
             redirectAttributes.addFlashAttribute("error", "用户名或密码错误");
             return "redirect:/login?error=true";
         } catch (Exception e) {
             // 其他异常
-            System.out.println("登录过程中发生异常: " + e.getMessage());
+            logger.error("登录过程中发生异常: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "登录失败，请稍后重试");
             return "redirect:/login?error=true";
         }

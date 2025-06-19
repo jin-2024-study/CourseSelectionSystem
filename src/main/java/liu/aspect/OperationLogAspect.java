@@ -16,6 +16,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 操作日志AOP切面
@@ -27,6 +29,7 @@ public class OperationLogAspect {
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
     private final ThreadLocal<String> oldDataThreadLocal = new ThreadLocal<>();
+    private static final Logger logger = LoggerFactory.getLogger(OperationLogAspect.class);
 
     public OperationLogAspect(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper) {
         this.eventPublisher = eventPublisher;
@@ -239,9 +242,7 @@ public class OperationLogAspect {
             eventPublisher.publishEvent(logEvent);
 
         } catch (Exception e) {
-            // 记录日志不应该影响主业务
-            System.err.println("记录操作日志失败: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("记录操作日志失败: {}", e.getMessage(), e);
         }
     }
 

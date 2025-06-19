@@ -5,6 +5,8 @@ import liu.entity.CourseSelection;
 import liu.entity.Student;
 import liu.service.StudentService;
 import liu.service.CourseSelectionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,8 @@ import java.util.List;
 @Service
 @Transactional
 public class StudentServiceImpl implements StudentService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(StudentServiceImpl.class);
     
     @Autowired
     private StudentDao studentDao;
@@ -34,16 +38,16 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public boolean insertStudent(Student student) {
-        System.out.println("StudentService.insertStudent 开始执行，学生对象: " + student);
-        System.out.println("插入前 student_id: " + student.getStudent_id());
+        logger.info("StudentService.insertStudent 开始执行，学生对象: {}", student);
+        logger.debug("插入前 student_id: {}", student.getStudent_id());
         
         int result = studentDao.insertStudent(student);
         
-        System.out.println("StudentDao.insertStudent 返回结果: " + result);
-        System.out.println("插入后 student_id: " + student.getStudent_id());
+        logger.debug("StudentDao.insertStudent 返回结果: {}", result);
+        logger.debug("插入后 student_id: {}", student.getStudent_id());
         
         boolean success = result > 0;
-        System.out.println("StudentService.insertStudent 执行结果: " + success);
+        logger.info("StudentService.insertStudent 执行结果: {}", success);
         
         return success;
     }
@@ -79,7 +83,7 @@ public class StudentServiceImpl implements StudentService {
             
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("删除学生及相关数据时发生错误: {}", e.getMessage(), e);
             // 由于添加了@Transactional注解，发生异常时会自动回滚事务
             throw new RuntimeException("删除学生及相关数据时发生错误: " + e.getMessage(), e);
         }

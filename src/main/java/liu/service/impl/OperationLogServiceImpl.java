@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Transactional
 public class OperationLogServiceImpl implements OperationLogService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OperationLogServiceImpl.class);
 
     @Autowired
     private OperationLogDao operationLogDao;
@@ -205,7 +209,7 @@ public class OperationLogServiceImpl implements OperationLogService {
             
             redisTemplate.delete(CACHE_STATISTICS_KEY);
         } catch (Exception e) {
-            System.err.println("Failed to clear cache: " + e.getMessage());
+            logger.error("Failed to clear cache: {}", e.getMessage(), e);
         }
     }
 } 
