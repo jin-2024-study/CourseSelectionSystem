@@ -163,7 +163,7 @@ public class CourseSelectionController {
         
         try {
             // 每页显示10条记录
-            int pageSize = 10;
+            int pageSize = 7;
             int offset = (page - 1) * pageSize;
             
             List<Student> allStudents;

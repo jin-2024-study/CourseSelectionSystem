@@ -1,7 +1,6 @@
 package liu.service.impl;
 
 import liu.dao.CourseSelectionDao;
-import liu.dao.CourseSelectionListDao;
 import liu.entity.CourseSelection;
 import liu.entity.CourseSelectionList;
 import liu.service.CourseSelectionService;

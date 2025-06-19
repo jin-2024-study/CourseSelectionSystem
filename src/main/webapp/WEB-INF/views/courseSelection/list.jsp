@@ -324,7 +324,7 @@
                 </div>
                 
                 <div style="margin-top: 10px; color: #6c757d; font-size: 14px;">
-                    第 ${currentPage} 页，共 ${totalPages} 页，每页显示 10 条记录
+                    第 ${currentPage} 页，共 ${totalPages} 页，每页显示 7 条记录
                 </div>
             </div>
         </c:if>

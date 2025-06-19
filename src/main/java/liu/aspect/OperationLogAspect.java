@@ -37,7 +37,7 @@ public class OperationLogAspect {
      * 定义切点 - 拦截学生管理相关的操作
      */
     @Pointcut("execution(* liu.controller.StudentController.add(..)) || " +
-              "execution(* liu.controller.StudentController.*.edit(..)) || " +
+              "execution(* liu.controller.StudentController.update(..)) || " +
               "execution(* liu.controller.StudentController.delete(..))")
     public void studentOperationPointcut() {}
 
@@ -150,7 +150,7 @@ public class OperationLogAspect {
             // 根据方法名确定操作类型
             if (methodName.contains("add") || methodName.equals("addCourseSelection")) {
                 operationType = "INSERT";
-            } else if (methodName.contains("edit") || methodName.equals("editCourseSelection") || methodName.equals("editCourse")) {
+            } else if (methodName.contains("update") || methodName.equals("editCourseSelection") || methodName.equals("editCourse")) {
                 operationType = "UPDATE";
             } else if (methodName.contains("delete") || methodName.equals("deleteCourseSelection") || methodName.equals("deleteCourse")) {
                 operationType = "DELETE";

@@ -1,7 +1,6 @@
 package liu.service.impl;
 
-import liu.dao.CourseDao;
-import liu.dao.CourseSelectionDao;
+
 import liu.dao.CourseSelectionListDao;
 import liu.entity.CourseSelectionList;
 import liu.service.CourseSelectionListService;
@@ -18,11 +17,6 @@ public class CourseSelectionListServiceImpl implements CourseSelectionListServic
     @Autowired
     private CourseSelectionListDao courseSelectionListDao;
 
-    @Autowired
-    private CourseDao courseDao;
-
-    @Autowired
-    private CourseSelectionDao courseSelectionDao;
     
     @Override
     public CourseSelectionList getCourseSelectionListById(int listId) {

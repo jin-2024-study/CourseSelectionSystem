@@ -16,7 +16,7 @@ public class MultipartConfig {
 
     /**
      * 配置文件上传参数
-     * Spring Boot 2.x 使用内置的StandardServletMultipartResolver
+     * 使用内置的StandardServletMultipartResolver
      */
     @Bean
     public MultipartConfigElement multipartConfigElement() {
@@ -34,28 +34,4 @@ public class MultipartConfig {
         
         return factory.createMultipartConfig();
     }
-
-    // 注释掉CommonsMultipartResolver，使用Spring Boot内置的StandardServletMultipartResolver
-    // Spring Boot 2.x 默认使用StandardServletMultipartResolver，不需要额外配置
-    /*
-    @Bean(name = "multipartResolver")
-    public CommonsMultipartResolver multipartResolver() {
-        CommonsMultipartResolver resolver = new CommonsMultipartResolver();
-        
-        // 设置编码
-        resolver.setDefaultEncoding("UTF-8");
-        
-        // 设置最大上传文件大小
-        resolver.setMaxUploadSize(100 * 1024 * 1024); // 100MB
-        resolver.setMaxUploadSizePerFile(10 * 1024 * 1024); // 10MB per file
-        
-        // 设置内存阈值，超过此值将写入临时文件
-        resolver.setMaxInMemorySize(1024); // 1KB
-        
-        // 启用延迟解析
-        resolver.setResolveLazily(true);
-        
-        return resolver;
-    }
-    */
 } 
