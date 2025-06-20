@@ -1,6 +1,6 @@
 ## 📋 项目概述
 
-课程选课系统是一个基于Spring Boot + MyBatis + Spring Security的企业级Web应用程序，
+课程选课系统是一个基于Spring Boot + MyBatis + Spring Security的Web应用程序，
 支持普通用户系统管理、管理员系统管理等功能。
 
 ### 基本信息
@@ -25,7 +25,7 @@
 | Maven | 3.6+ | Apache Maven 3.9.4 | 必须，构建工具 |
 | MySQL | 8.0+ | MySQL 8.0.28 | 必须，主数据库 |
 | Redis | 6.0+ | Redis 7.0.12 | 必须，缓存服务 |
-| ActiveMQ | 5.17+ | ActiveMQ 5.17.6 | 可选，消息队列 |
+| ActiveMQ | 5.17+ | ActiveMQ 5.17.6 | 必须，消息队列 |
 
 ## 🔍 效果展示页面
 用户登录页面
